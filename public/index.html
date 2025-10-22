@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Notion Gallery Slider Widget</title>
+    <link rel="stylesheet" href="/public/styles.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Notion Gallery Slider Widget</h1>
+      <form id="config-form">
+        <label>
+          Database ID
+          <input id="dbId" name="dbId" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+        </label>
+        <label>
+          Max items
+          <input id="limit" name="limit" type="number" value="10" min="1" max="100" />
+        </label>
+        <button type="submit">Load</button>
+      </form>
+
+      <section class="slider" id="slider">
+        <button class="nav prev" id="prev">‹</button>
+        <div class="track" id="track"></div>
+        <button class="nav next" id="next">›</button>
+      </section>
+    </main>
+
+    <script src="/public/main.js" type="module"></script>
+  </body>
+</html>
