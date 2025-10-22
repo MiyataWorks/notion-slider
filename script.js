@@ -5,6 +5,30 @@ let itemsPerView = 3;
 let notionToken = '';
 let databaseId = '';
 
+function extractDatabaseId(value){
+    const input = String(value || '').trim();
+    try{
+        const u = new URL(input);
+        const path = u.pathname || '';
+        const m32 = path.match(/[0-9a-f]{32}/i);
+        if(m32) return m32[0];
+        const muuid = path.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+        if(muuid) return muuid[0];
+    }catch(_e){/* not a URL */}
+    return input;
+}
+
+function normalizeDatabaseId(value){
+    const raw = String(value || '').trim();
+    if(!raw) return null;
+    if(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw)) return raw;
+    const hex = raw.toLowerCase().replace(/[^0-9a-f]/g, '');
+    if(hex.length === 32){
+        return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+    }
+    return null;
+}
+
 // DOM要素
 const configPanel = document.getElementById('config-panel');
 const showConfigBtn = document.getElementById('show-config-btn');
@@ -54,12 +78,19 @@ function toggleConfig() {
 async function loadGallery() {
     // 入力値を取得
     notionToken = document.getElementById('notion-token').value.trim();
-    databaseId = document.getElementById('database-id').value.trim();
+    const inputDbId = document.getElementById('database-id').value.trim();
+    const extracted = extractDatabaseId(inputDbId);
+    const normalized = normalizeDatabaseId(extracted);
+    databaseId = normalized || '';
     itemsPerView = parseInt(document.getElementById('items-per-view').value);
     
     // バリデーション
-    if (!notionToken || !databaseId) {
-        showError('Notion Integration TokenとDatabase IDを入力してください。');
+    if (!notionToken) {
+        showError('Notion Integration Tokenを入力してください。');
+        return;
+    }
+    if (!databaseId) {
+        showError('Database IDの形式が正しくありません。NotionのURLまたはID(32桁/UUID)を入力してください。');
         return;
     }
     
@@ -101,7 +132,15 @@ async function loadGallery() {
         
     } catch (err) {
         console.error('エラー:', err);
-        showError(`エラーが発生しました: ${err.message}`);
+        const message = err?.message || String(err);
+        // よくあるNotionエラーの補助説明
+        let hint = '';
+        if (/unauthorized|invalid|authorization/i.test(message)) {
+            hint = '（Tokenが不正、またはデータベースにIntegrationが追加されていない可能性）';
+        } else if (/object not found|not found/i.test(message)) {
+            hint = '（Database IDが誤っている可能性）';
+        }
+        showError(`エラーが発生しました: ${message} ${hint}`.trim());
     } finally {
         loadBtn.classList.remove('loading');
     }
@@ -122,8 +161,17 @@ async function fetchNotionDatabase() {
     });
     
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        let message = `HTTP error! status: ${response.status}`;
+        try{
+            const text = await response.text();
+            try{
+                const j = JSON.parse(text);
+                message = j?.message || j?.error || message;
+            }catch(_e){
+                if (text) message = text;
+            }
+        }catch(_e){/* ignore */}
+        throw new Error(message);
     }
     
     return await response.json();

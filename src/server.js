@@ -62,7 +62,8 @@ function buildCacheKey(databaseId, params) {
 
 app.get('/api/gallery', async (req, res) => {
   try {
-    const databaseId = String(req.query.databaseId || '').trim();
+    const rawId = String(req.query.databaseId || '').trim();
+    const databaseId = normalizeDatabaseId(rawId);
     if (!databaseId) {
       res.status(400).json({ error: 'Missing required query parameter: databaseId' });
       return;
@@ -106,9 +107,35 @@ app.get('/api/gallery', async (req, res) => {
     // eslint-disable-next-line no-console
     console.error('[api/gallery] error', err);
     const status = err?.status || err?.statusCode || 500;
-    res.status(status).json({ error: 'Failed to fetch Notion data' });
+    res.status(status).json({ error: err?.message || 'Failed to fetch Notion data' });
   }
 });
+
+function normalizeDatabaseId(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  // Already UUID format
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw)) return raw;
+  // Extract from URL path if provided
+  try {
+    const u = new URL(raw);
+    const path = u.pathname || '';
+    const hex32 = path.match(/[0-9a-f]{32}/i);
+    if (hex32) {
+      const hex = hex32[0].toLowerCase();
+      return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+    }
+    const uuid = path.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+    if (uuid) return uuid[0];
+  } catch (_e) {
+    // Not a URL, continue
+  }
+  const hex = raw.toLowerCase().replace(/[^0-9a-f]/g, '');
+  if (hex.length === 32) {
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
+  return null;
+}
 
 app.listen(port, () => {
   console.log(`[server] listening on http://localhost:${port}`);
