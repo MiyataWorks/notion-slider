@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Gallery Slider Widget</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 設定パネル -->
+    <div id="config-panel" class="config-panel">
+        <h2>🎨 Notion Gallery Slider</h2>
+        <div class="config-form">
+            <div class="form-group">
+                <label for="notion-token">Notion Integration Token:</label>
+                <input 
+                    type="password" 
+                    id="notion-token" 
+                    placeholder="secret_xxxxxxxxxxxxx"
+                    autocomplete="off"
+                />
+                <small>Notionの Integration Token を入力してください</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="database-id">Database ID:</label>
+                <input 
+                    type="text" 
+                    id="database-id" 
+                    placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                />
+                <small>NotionデータベースのIDを入力してください</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="items-per-view">表示アイテム数:</label>
+                <input 
+                    type="number" 
+                    id="items-per-view" 
+                    value="3" 
+                    min="1" 
+                    max="6"
+                />
+                <small>一度に表示するカードの数（1-6）</small>
+            </div>
+            
+            <button id="load-btn" class="load-btn">
+                <span class="btn-text">ギャラリーを読み込む</span>
+                <span class="btn-loader"></span>
+            </button>
+            
+            <button id="toggle-config-btn" class="toggle-btn">設定を隠す</button>
+        </div>
+        
+        <div class="info-box">
+            <h3>📋 セットアップ方法</h3>
+            <ol>
+                <li>Notionで Integration を作成（<a href="https://www.notion.so/my-integrations" target="_blank">https://www.notion.so/my-integrations</a>）</li>
+                <li>Integration Token をコピー</li>
+                <li>対象のデータベースページで「共有」→ Integration を追加</li>
+                <li>データベースIDをURLから取得（<code>notion.so/xxxxx?v=yyyy</code> の xxxxx 部分）</li>
+                <li>上記の情報を入力して「ギャラリーを読み込む」をクリック</li>
+            </ol>
+        </div>
+    </div>
+    
+    <button id="show-config-btn" class="show-config-btn" style="display: none;">⚙️ 設定</button>
+    
+    <!-- ギャラリースライダー -->
+    <div id="gallery-container" class="gallery-container">
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Notionデータベースを読み込み中...</p>
+        </div>
+        
+        <div id="error" class="error" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <p id="error-message"></p>
+        </div>
+        
+        <div id="slider-wrapper" class="slider-wrapper" style="display: none;">
+            <button id="prev-btn" class="nav-btn prev-btn" aria-label="前へ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+            
+            <div id="slider" class="slider">
+                <div id="slider-track" class="slider-track">
+                    <!-- カードがここに動的に追加されます -->
+                </div>
+            </div>
+            
+            <button id="next-btn" class="nav-btn next-btn" aria-label="次へ">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="pagination" class="pagination" style="display: none;">
+            <!-- ページネーションドットがここに追加されます -->
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
