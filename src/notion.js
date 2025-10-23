@@ -81,6 +81,36 @@ export function createNotionClient(token) {
   return new Client({ auth: token });
 }
 
+export function createMockNotionClient() {
+  return {
+    databases: {
+      async query({ database_id, page_size }) {
+        const size = Math.max(1, Math.min(10, Number(page_size || 5)));
+        const results = Array.from({ length: size }, (_v, i) => ({
+          id: `mock-page-${i + 1}`,
+          url: `https://example.com/items/${i + 1}`,
+          cover: {
+            type: 'external',
+            external: { url: `https://picsum.photos/seed/${i + 1}/640/360` },
+          },
+          properties: {
+            Title: {
+              type: 'title',
+              title: [{ plain_text: `Mock Item ${i + 1} (${database_id.slice(0, 6)})` }],
+            },
+            Description: {
+              type: 'rich_text',
+              rich_text: [{ plain_text: 'This is a mock description.' }],
+            },
+            Link: { type: 'url', url: `https://example.com/items/${i + 1}` },
+          },
+        }));
+        return { results };
+      },
+    },
+  };
+}
+
 export async function fetchDatabasePages(notion, { databaseId, filter, sorts, pageSize = 10 }) {
   return await notion.databases.query({
     database_id: databaseId,

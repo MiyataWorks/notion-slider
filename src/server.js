@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import crypto from 'crypto';
-import { createNotionClient, fetchDatabasePages, transformPagesToItems } from './notion.js';
+import { createNotionClient, createMockNotionClient, fetchDatabasePages, transformPagesToItems } from './notion.js';
 import { createMemoryCache } from './cache.js';
 
 dotenv.config();
@@ -27,6 +27,10 @@ if (notionToken) {
     // eslint-disable-next-line no-console
     console.error('[notion] client init failed:', err?.message || err);
   }
+}
+// Optional mock mode for local verification without token
+if (!notion && process.env.MOCK_NOTION === 'true') {
+  notion = createMockNotionClient();
 }
 
 app.use(compression());
@@ -137,6 +141,11 @@ function normalizeDatabaseId(value) {
   return null;
 }
 
-app.listen(port, () => {
-  console.log(`[server] listening on http://localhost:${port}`);
-});
+export { app };
+
+// 起動ガード: 環境変数 START_SERVER=false の場合は自動起動しない
+if (process.env.START_SERVER !== 'false') {
+  app.listen(port, () => {
+    console.log(`[server] listening on http://localhost:${port}`);
+  });
+}
