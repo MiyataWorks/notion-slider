@@ -4,7 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import crypto from 'crypto';
+import { createHash } from 'node:crypto';
 import { createNotionClient, createMockNotionClient, fetchDatabasePages, transformPagesToItems } from './notion.js';
 import { createMemoryCache } from './cache.js';
 
@@ -60,7 +60,7 @@ function safeJsonParse(str) {
 
 function buildCacheKey(databaseId, params) {
   const base = JSON.stringify({ databaseId, ...params });
-  const hash = crypto.createHash('sha1').update(base).digest('hex');
+  const hash = createHash('sha1').update(base).digest('hex');
   return `gallery:${databaseId}:${hash}`;
 }
 
