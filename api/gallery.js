@@ -1,4 +1,6 @@
 import crypto from 'crypto';
+// Ensure Vercel uses Node.js runtime (not Edge)
+export const config = { runtime: 'nodejs20.x' };
 import { createNotionClient, createMockNotionClient, fetchDatabasePages, transformPagesToItems } from '../src/notion.js';
 import { createMemoryCache } from '../src/cache.js';
 
