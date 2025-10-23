@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import { createHash } from 'node:crypto';
 // Ensure Vercel uses Node.js runtime (not Edge)
 export const config = { runtime: 'nodejs' };
 import { createNotionClient, createMockNotionClient, fetchDatabasePages, transformPagesToItems } from '../src/notion.js';
@@ -33,7 +33,7 @@ function safeJsonParse(str) {
 
 function buildCacheKey(databaseId, params) {
   const base = JSON.stringify({ databaseId, ...params });
-  const hash = crypto.createHash('sha1').update(base).digest('hex');
+  const hash = createHash('sha1').update(base).digest('hex');
   return `gallery:${databaseId}:${hash}`;
 }
 
